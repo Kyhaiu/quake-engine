@@ -25,6 +25,8 @@ Face::Face()
   this->he = nullptr;
   this->visible = false;
   this->normal = Vec3f(0.0f, 0.0f, 0.0f);
+  this->centroid = Vec3f(0.0f, 0.0f, 0.0f);
+  this->id = "";
 }
 
 /**
@@ -39,7 +41,6 @@ Face::Face()
 bool Face::is_visible(Vec3f player_position)
 {
   determine_face_normal();
-
   determine_face_centroid();
 
   Vec3f face2player = Vector3Normalize(player_position - this->centroid);
@@ -110,7 +111,7 @@ void Face::determine_face_centroid(bool screen_coords)
 /**
  * @brief Construtor da classe Vertex
  *
- * Inicializa o vetor da classe com o vetor 4D nulo.
+ * Inicializa o vetor da classe com o vetor 4D nulo e UV em 0
  *
  */
 Vertex::Vertex()
@@ -119,7 +120,12 @@ Vertex::Vertex()
   this->vertex_screen = Vec3f();
   this->clipped = false;
   this->incident_edge = nullptr;
+  this->u = 0.0f;
+  this->v = 0.0f;
+  this->has_uv = false;
 }
+
+Vertex::~Vertex() = default;
 
 /**
  * @brief Construtor da classe Vertex
@@ -130,8 +136,11 @@ Vertex::Vertex()
  * @param w Coordenada w do vetor
  * @param half_edge Ponteiro para a meia aresta que tem o vértice como origem
  * @param id Identificador do vértice
+ * @param u_coord Coordenada U da textura (0..1)
+ * @param v_coord Coordenada V da textura (0..1)
+ * @param has_uv Flag que indica se o vértice possui um mapa UV associado
  */
-Vertex::Vertex(float x, float y, float z, float w, HalfEdge *half_edge, std::string id)
+Vertex::Vertex(float x, float y, float z, float w, HalfEdge *half_edge, std::string id, float u_coord, float v_coord, bool has_uv)
 {
   vertex = {x, y, z, w};
   // 1.17549e-38 is the smallest positive float value
@@ -139,4 +148,8 @@ Vertex::Vertex(float x, float y, float z, float w, HalfEdge *half_edge, std::str
   this->id = id;
   incident_edge = half_edge;
   normal = Vec3f();
+  this->clipped = false;
+  this->u = u_coord;
+  this->v = v_coord;
+  this->has_uv = has_uv;
 }

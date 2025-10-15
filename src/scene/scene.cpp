@@ -126,6 +126,51 @@ void Scene::clipping()
   }
 }
 
+void Scene::apply_pipeline()
+{
+  switch (illumination_mode)
+  {
+  case IlluminationMode::FLAT:
+    apply_pipeline_flat();
+    break;
+  case IlluminationMode::GOURAUD:
+    apply_pipeline_gouraud();
+    break;
+  case IlluminationMode::PHONG:
+    apply_pipeline_phong();
+    break;
+  case IlluminationMode::TEXTURED:
+    apply_pipeline_texture();
+    break;
+  case IlluminationMode::NO_ILLUMINATION:
+    // pode chamar flat com cores neutras ou aplicar apenas wireframe
+    break;
+  }
+
+  if (wireframe)
+  {
+    // Aqui você pode percorrer os objetos e chamar pipeline::DrawLineBuffer ou similar
+    for (auto obj : objects)
+    {
+      for (auto face : obj->faces)
+      {
+        if (!face->visible)
+          continue;
+
+        std::vector<Vec3f> vertexes;
+        HalfEdge *he = face->he;
+        do
+        {
+          vertexes.push_back(he->origin->vertex_screen);
+          he = he->next;
+        } while (he != face->he);
+
+        pipeline::DrawLineBuffer(vertexes, models::WHITE, z_buffer, color_buffer);
+      }
+    }
+  }
+}
+
 void Scene::apply_pipeline_flat()
 {
 
@@ -220,8 +265,6 @@ void Scene::apply_pipeline_flat()
       // Se o vetor de vertices for menor que 3, não é possível formar um polígono, então não rasteriza.
       if (vertexes.size() < 3)
         continue;
-
-      pipeline::DrawLineBuffer(vertexes, models::CYAN, z_buffer, color_buffer);
 
       pipeline::fill_polygon_flat(vertexes, global_light, omni_lights, player->position, face->centroid, face->normal, object->material, z_buffer, color_buffer);
     }
@@ -352,14 +395,6 @@ void Scene::apply_pipeline_gouraud()
       if (vertexes_gouraud.size() < 3)
         continue;
 
-      // Caso a gente decida desenhar o wireframe, a gente usa esse vector
-      std::vector<Vec3f> wireframe;
-
-      for (auto v : vertexes_gouraud)
-        wireframe.push_back(v.first);
-
-      // pipeline::DrawLineBuffer(wireframe, models::CYAN, z_buffer, color_buffer);
-
       pipeline::fill_polygon_gourand(vertexes_gouraud, z_buffer, color_buffer);
     }
   }
@@ -476,19 +511,129 @@ void Scene::apply_pipeline_phong()
       if (vertexes.size() < 3)
         continue;
 
-      // Caso a gente decida desenhar o wireframe, a gente usa esse vector
-      std::vector<Vec3f> wireframe;
-
-      for (auto v : vertexes)
-        wireframe.push_back(v.first);
-
-      // pipeline::DrawLineBuffer(wireframe, models::CYAN, z_buffer, color_buffer);
-
       pipeline::fill_polygon_phong(vertexes, object->getCentroid(), global_light, omni_lights, eye, object_material, z_buffer, color_buffer);
     }
   }
 
   // Resetar a clipping flag de cada vértice para a próxima iteração
+  for (auto object : objects)
+    object->is_visible = true;
+}
+
+/**
+ @todo Está com problema na estrutura
+
+ O mapeamento de textura é feito por face. Por isso cada vértice de cada face tem seu par (u, v).
+
+ As malhas poligonais esta triangularizando um cubo, mas usando UVs únicas por vértice global.
+ Isso funciona para a primeira face, mas para as outras faces os vértices compartilhados têm UVs diferentes
+ para cada face — ou seja, o mesmo vértice não pode ter múltiplas UVs.
+ Isso é o que causa as distorções nas outras faces.
+
+ O que precisa fazer:
+
+ 1. Cada face deve ter seus próprios vértices se usar UVs diferentes, mesmo que a posição 3D seja a mesma.
+
+ 2. Não dá para simplesmente atribuir UVs nos vértices globais do cubo, pois um vértice pode estar na face da frente (UV = 0,0) e na face do topo (UV = 1,0) ao mesmo tempo — isso não funciona no pipeline atual.
+
+ Alternativamente pode se fazer:
+
+ 1. O que você pode fazer é colocar as tuplas (u, v)
+    na mesma sequência com a qual se percorrem os vértices da face.
+    Assim, fica uma relação implícita.
+    O primeiro par u, v corresponde ao primeiro vértice da face e assim sucessivamente.
+ */
+void Scene::apply_pipeline_texture()
+{
+  // Pré-computação do que está dentro da visão do jogador
+  clipping();
+
+  // Matrizes de transformação
+  Matrix sru_src_matrix = pipeline::sru_to_src(player->position, player->target);
+  Matrix projection_matrix = pipeline::projection(player->position, player->target, player->d);
+  Matrix viewport_matrix = pipeline::src_to_srt(min_window, min_viewport, max_window, max_viewport, true);
+
+  Matrix pipeline_matrix = MatrixMultiply(viewport_matrix, projection_matrix);
+  pipeline_matrix = MatrixMultiply(pipeline_matrix, sru_src_matrix);
+
+  Vec4f vectorResult = Vec4f();
+
+  // Aplica pipeline em todos os objetos
+  for (auto object : objects)
+  {
+    if (!object->is_visible)
+      continue;
+
+    // Aplica o pipeline em todos os vértices
+    for (auto v : object->vertexes)
+    {
+      vectorResult = MatrixMultiplyVector(pipeline_matrix, v->vertex);
+
+      v->vertex_screen = {vectorResult.x / vectorResult.w,
+                          vectorResult.y / vectorResult.w,
+                          vectorResult.z};
+
+      // Garantir que u, v já estão definidos (normalizados entre 0 e 1)
+      // Para cubo simples ou UV planar
+      if (!v->has_uv)
+      {
+        v->u = (v->vertex.x + 1.0f) / 2.0f; // mapeia -1..1 -> 0..1
+        v->v = (v->vertex.y + 1.0f) / 2.0f;
+        v->has_uv = true;
+      }
+    }
+
+    // Determina visibilidade das faces
+    for (auto face : object->faces)
+    {
+      face->visible = face->is_visible(player->position);
+    }
+  }
+
+  // Inicializa buffers
+  initialize_buffers();
+
+  // Rasterização de cada face
+  for (auto object : objects)
+  {
+    if (!object->is_visible)
+      continue;
+
+    for (auto face : object->faces)
+    {
+      if (!face->visible)
+        continue;
+
+      HalfEdge *he = face->he;
+      std::vector<Vertex *> vertexes;
+
+      while (true)
+      {
+        vertexes.push_back(he->origin);
+        he = he->next;
+        if (he == face->he)
+          break;
+      }
+
+      // vertexes = pipeline::clip_2D_polygon(vertexes, min_viewport, max_viewport);
+
+      if (vertexes.size() < 3)
+        continue;
+
+      // Desenha linhas para depuração
+      std::vector<Vec3f> vertex_positions;
+      for (auto v : vertexes)
+        vertex_positions.push_back(v->vertex_screen);
+
+      pipeline::DrawLineBuffer(vertex_positions, models::CYAN, z_buffer, color_buffer);
+
+      // Preenchimento da face com textura
+      pipeline::fill_polygon_texture(vertexes, object->texture, global_light, omni_lights, player->position,
+                                     face->centroid, face->normal, object->material, z_buffer, color_buffer);
+    }
+  }
+
+  // Resetar flag de visibilidade
   for (auto object : objects)
     object->is_visible = true;
 }

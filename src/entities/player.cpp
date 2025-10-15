@@ -78,6 +78,29 @@ void Player::PlayerMoveUp(float distance)
   target = target + delta;
 }
 
+/**
+ * @brief Função que rotaciona a câmera(player) em torno do ponto alvo
+ *
+ * @param deltaAngleX Ângulo de rotação em torno do eixo X
+ * @param deltaAngleY Ângulo de rotação em torno do eixo Y
+ *
+ * @ref https://asliceofrendering.com/camera/2019/11/30/ArcballCamera/
+ */
+void Player::moveArcball(float deltaAngleX, float deltaAngleY)
+{
+  Vec3f camera_position = position;
+  Vec3f camera_direction = camera_position - target;
+
+  // Rotaciona a camera em torno do eixo X
+  camera_position = target + Vector3Transform(camera_direction, MatrixRotate({1, 0, 0}, deltaAngleX));
+  camera_direction = camera_position - target;
+
+  // Rotaciona a camera em torno do eixo Y
+  camera_position = target + Vector3Transform(camera_direction, MatrixRotate({0, 1, 0}, deltaAngleY));
+
+  position = camera_position;
+}
+
 // ========================
 // SIMULAÇÃO DE MOVIMENTO
 // ========================

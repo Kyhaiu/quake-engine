@@ -21,7 +21,7 @@ set_optimize("fastest")
 add_includedirs("include")
 
 -- add libraries
-local project_libs = { "cxxopts", "fmt", "opengl", "libsdl" }
+local project_libs = { "cxxopts", "fmt", "opengl", "libsdl3" }
 
 add_requires(table.unpack(project_libs))
 
@@ -31,10 +31,10 @@ target("imgui")
   add_packages(table.unpack(project_libs))
   set_targetdir("./app")
 
-target("imgui-sdl2")
+target("imgui-sdl3")
   set_kind("static")
   add_deps("imgui")
-  add_files("include/imgui-sdl2/*.cpp")
+  add_files("include/imgui-sdl3/*.cpp")
   add_packages(table.unpack(project_libs))
   set_targetdir("./app")
 
@@ -74,17 +74,24 @@ target("scene")
   add_packages(table.unpack(project_libs))
   set_targetdir("./app")
 
+target("utils")
+  set_kind("static")
+  add_files("src/**/*.cpp")
+  add_packages(table.unpack(project_libs))
+  set_targetdir("./app")
+
 -- main project executable
 target("app")
   set_kind("binary")
   add_files("src/main.cpp")
   add_packages(table.unpack(project_libs))
   add_deps("imgui")
-  add_deps("imgui-sdl2")
+  add_deps("imgui-sdl3")
   add_deps("core")
   add_deps("entities")
   add_deps("math")
   add_deps("models")
   add_deps("rendering")
   add_deps("scene")
+  add_deps("utils")
   set_targetdir("./app")

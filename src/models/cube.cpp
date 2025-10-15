@@ -1,4 +1,7 @@
 #include <models/mesh.hpp>
+#include <models/texture.hpp>
+
+#include <utils/bmp_reader.hpp>
 
 /**
  * @brief Retorna a malha de um cubo
@@ -7,17 +10,17 @@
  *
  * @return Mesh* Ponteiro para a malha do cubo
  */
-Mesh *cube(Vec3f shift)
+Mesh *cube(Vec3f shift, std::string filename)
 {
-  // Vértices com deslocamento aplicado corretamente
-  Vertex *v0 = new Vertex(-1.0f + shift.x, -1.0f + shift.y, -1.0f + shift.z, 1.0f, nullptr, "v0");
-  Vertex *v1 = new Vertex(1.0f + shift.x, -1.0f + shift.y, -1.0f + shift.z, 1.0f, nullptr, "v1");
-  Vertex *v2 = new Vertex(1.0f + shift.x, -1.0f + shift.y, 1.0f + shift.z, 1.0f, nullptr, "v2");
-  Vertex *v3 = new Vertex(-1.0f + shift.x, -1.0f + shift.y, 1.0f + shift.z, 1.0f, nullptr, "v3");
-  Vertex *v4 = new Vertex(-1.0f + shift.x, 1.0f + shift.y, -1.0f + shift.z, 1.0f, nullptr, "v4");
-  Vertex *v5 = new Vertex(1.0f + shift.x, 1.0f + shift.y, -1.0f + shift.z, 1.0f, nullptr, "v5");
-  Vertex *v6 = new Vertex(1.0f + shift.x, 1.0f + shift.y, 1.0f + shift.z, 1.0f, nullptr, "v6");
-  Vertex *v7 = new Vertex(-1.0f + shift.x, 1.0f + shift.y, 1.0f + shift.z, 1.0f, nullptr, "v7");
+  // Vértices do cubo com UVs
+  Vertex *v0 = new Vertex(-1.0f + shift.x, -1.0f + shift.y, -1.0f + shift.z, 1.0f, nullptr, "v0", 0.0f, 0.0f);
+  Vertex *v1 = new Vertex(1.0f + shift.x, -1.0f + shift.y, -1.0f + shift.z, 1.0f, nullptr, "v1", 1.0f, 0.0f);
+  Vertex *v2 = new Vertex(1.0f + shift.x, -1.0f + shift.y, 1.0f + shift.z, 1.0f, nullptr, "v2", 1.0f, 1.0f);
+  Vertex *v3 = new Vertex(-1.0f + shift.x, -1.0f + shift.y, 1.0f + shift.z, 1.0f, nullptr, "v3", 0.0f, 1.0f);
+  Vertex *v4 = new Vertex(-1.0f + shift.x, 1.0f + shift.y, -1.0f + shift.z, 1.0f, nullptr, "v4", 0.0f, 0.0f);
+  Vertex *v5 = new Vertex(1.0f + shift.x, 1.0f + shift.y, -1.0f + shift.z, 1.0f, nullptr, "v5", 1.0f, 0.0f);
+  Vertex *v6 = new Vertex(1.0f + shift.x, 1.0f + shift.y, 1.0f + shift.z, 1.0f, nullptr, "v6", 1.0f, 1.0f);
+  Vertex *v7 = new Vertex(-1.0f + shift.x, 1.0f + shift.y, 1.0f + shift.z, 1.0f, nullptr, "v7", 0.0f, 1.0f);
 
   std::vector<std::vector<int>> edges = {
       // Back Face
@@ -40,6 +43,20 @@ Mesh *cube(Vec3f shift)
       {4, 7, 6}};
 
   Mesh *cube = new Mesh({v0, v1, v2, v3, v4, v5, v6, v7}, edges, "cube");
+
+  // Carrega a textura BMP
+  models::Texture tex;
+  if (!models::loadTexture(filename, tex))
+  {
+  }
+  else
+  {
+    cube->texture = tex;
+  }
+
+  // Marca que todos os vértices têm UVs
+  for (auto v : cube->vertexes)
+    v->has_uv = true;
 
   return cube;
 }

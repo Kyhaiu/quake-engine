@@ -1,18 +1,14 @@
-#include <SDL.h>
-
+#include <SDL3/SDL.h>
 #include <core/game.hpp>
-
-#define SDL_main main
 
 int main(int argc, char *argv[])
 {
   std::cout << "Iniciando aplicação...\n";
 
-  // Teste básico da SDL
-  if (SDL_Init(SDL_INIT_VIDEO) != 0)
+  // SDL3 usa SDL_InitSubSystem() ou apenas SDL_Init() da mesma forma
+  if (!SDL_Init(SDL_INIT_VIDEO))
   {
-    std::cout << "FALHA: SDL_Init: %s\n"
-              << SDL_GetError() << std::endl;
+    std::cerr << "FALHA: SDL_Init: " << SDL_GetError() << std::endl;
     return -1;
   }
 
@@ -22,8 +18,7 @@ int main(int argc, char *argv[])
   Game game;
   if (!game.initialize())
   {
-    std::cout << "FALHA: Game::initialize\n"
-              << std::endl;
+    std::cerr << "FALHA: Game::initialize" << std::endl;
     SDL_Quit();
     return -1;
   }
@@ -31,5 +26,6 @@ int main(int argc, char *argv[])
   game.run();
   game.shutdown();
 
+  SDL_Quit();
   return 0;
 }

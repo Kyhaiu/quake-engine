@@ -8,23 +8,23 @@ InputHandler::InputHandler()
 
 void InputHandler::handleEvent(const SDL_Event *event)
 {
-  if (event->type == SDL_KEYDOWN)
+  if (event->type == SDL_EVENT_KEY_DOWN)
   {
-    switch (event->key.keysym.sym)
+    switch (event->key.key)
     {
-    case SDLK_w:
+    case SDLK_W:
       moveForward = true;
       break;
-    case SDLK_s:
+    case SDLK_S:
       moveBackward = true;
       break;
-    case SDLK_a:
+    case SDLK_A:
       turnLeft = true;
       break;
-    case SDLK_d:
+    case SDLK_D:
       turnRight = true;
       break;
-    case SDLK_m:
+    case SDLK_M:
       toggleMoveLook = true;
       break;
     case SDLK_COMMA:
@@ -35,23 +35,23 @@ void InputHandler::handleEvent(const SDL_Event *event)
       break;
     }
   }
-  else if (event->type == SDL_KEYUP)
+  else if (event->type == SDL_EVENT_KEY_UP)
   {
-    switch (event->key.keysym.sym)
+    switch (event->key.key)
     {
-    case SDLK_w:
+    case SDLK_W:
       moveForward = false;
       break;
-    case SDLK_s:
+    case SDLK_S:
       moveBackward = false;
       break;
-    case SDLK_a:
+    case SDLK_A:
       turnLeft = false;
       break;
-    case SDLK_d:
+    case SDLK_D:
       turnRight = false;
       break;
-    case SDLK_m:
+    case SDLK_M:
       toggleMoveLook = false;
       break;
     case SDLK_COMMA:
@@ -66,5 +66,5 @@ void InputHandler::handleEvent(const SDL_Event *event)
 
 void InputHandler::update()
 {
-  // Could be used for frame-based input processing
+  // Pode ser usado para processamento de input baseado em frames
 }

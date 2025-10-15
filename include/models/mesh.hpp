@@ -4,6 +4,8 @@
 #include <models/colision.hpp>
 #include <models/common.hpp>
 
+#include <models/texture.hpp>
+
 #include <vector>
 #include <iostream>
 #include <string>
@@ -32,6 +34,9 @@ public:
 
   // Material do objeto
   models::Material material;
+
+  // Textura associada a malha
+  models::Texture texture;
 
   // Bounding box do modelo
   AABB bounds;

@@ -1065,3 +1065,132 @@ void pipeline::fill_polygon_phong(const std::vector<std::pair<Vec3f, Vec3f>> &_v
     }
   }
 }
+
+/**
+ * @brief Preenche um polígono com sombreamento baseado em textura (UV)
+ *
+ * @param vertexes Vertices da face do polígono
+ * @param tex Textura do objeto
+ * @param global_light Luz global (mantido caso queira aplicar iluminação multiplicativa)
+ * @param omni_lights Luzes omni
+ * @param eye Posição do observador
+ * @param face_centroid Centroide da face
+ * @param face_normal Vetor normal da face
+ * @param object_material Material do objeto
+ * @param z_buffer Buffer de profundidade
+ * @param color_buffer Buffer de cores
+ */
+void pipeline::fill_polygon_texture(const std::vector<Vertex *> &vertexes, const models::Texture &tex,
+                                    const models::GlobalLight &global_light,
+                                    const std::vector<models::Omni> &omni_lights,
+                                    const Vec3f &eye, const Vec3f &face_centroid, const Vec3f &face_normal,
+                                    const models::Material &object_material,
+                                    std::vector<std::vector<float>> &z_buffer,
+                                    std::vector<std::vector<models::Color>> &color_buffer)
+{
+  // Determina os limites da scanline
+  int y_min = std::numeric_limits<int>::max();
+  int y_max = std::numeric_limits<int>::min();
+
+  for (auto v : vertexes)
+  {
+    float y = v->vertex_screen.y;
+    if (y < y_min)
+      y_min = static_cast<int>(y);
+    if (y > y_max)
+      y_max = static_cast<int>(y);
+  }
+
+  std::vector<std::vector<Vertex *>> scanlines(y_max - y_min);
+
+  // Construção das scanlines
+  for (int i = 0; i < vertexes.size(); i++)
+  {
+    int k = (i + 1) % vertexes.size();
+    Vertex *start = vertexes[i];
+    Vertex *end = vertexes[k];
+
+    if (start->vertex_screen.y == end->vertex_screen.y)
+      continue;
+
+    Vertex *v1 = start;
+    Vertex *v2 = end;
+    if (v1->vertex_screen.y > v2->vertex_screen.y)
+      std::swap(v1, v2);
+
+    float dy = v2->vertex_screen.y - v1->vertex_screen.y;
+    float dx = (v2->vertex_screen.x - v1->vertex_screen.x) / dy;
+    float dz = (v2->vertex_screen.z - v1->vertex_screen.z) / dy;
+    float du = (v2->u - v1->u) / dy;
+    float dv = (v2->v - v1->v) / dy;
+
+    float x = v1->vertex_screen.x;
+    float z = v1->vertex_screen.z;
+    float u = v1->u;
+    float v = v1->v;
+
+    for (int y = static_cast<int>(v1->vertex_screen.y); y < static_cast<int>(v2->vertex_screen.y); y++)
+    {
+      Vertex *interp = new Vertex();
+      interp->vertex_screen = {x, static_cast<float>(y), z};
+      interp->u = u;
+      interp->v = v;
+
+      scanlines[y - y_min].push_back(interp);
+
+      x += dx;
+      z += dz;
+      u += du;
+      v += dv;
+    }
+  }
+
+  // Preenchimento das scanlines
+  for (auto scanline : scanlines)
+  {
+    std::sort(scanline.begin(), scanline.end(), [](Vertex *a, Vertex *b)
+              { return a->vertex_screen.x < b->vertex_screen.x; });
+
+    for (int j = 0; j < scanline.size(); j += 2)
+    {
+      int k = (j + 1) % scanline.size();
+      Vertex *start = scanline[j];
+      Vertex *end = scanline[k];
+
+      float dx = (end->vertex_screen.x - start->vertex_screen.x);
+      if (dx == 0)
+        dx = 1.0f; // evita divisão por zero
+
+      float dz = (end->vertex_screen.z - start->vertex_screen.z) / dx;
+      float du = (end->u - start->u) / dx;
+      float dv = (end->v - start->v) / dx;
+
+      float z = start->vertex_screen.z;
+      float u = start->u;
+      float v = start->v;
+
+      for (float x = ceilf(start->vertex_screen.x); x <= floorf(end->vertex_screen.x); x++)
+      {
+        // Calcula os índices na textura
+        int tex_u = std::min(std::max(int(u * (tex.width - 1)), 0), tex.width - 1);
+        int tex_v = std::min(std::max(int(v * (tex.height - 1)), 0), tex.height - 1);
+
+        models::Color color = tex.pixels[tex_v][tex_u];
+
+        // Aplica z-buffer
+        pipeline::z_buffer(Vec3f{x, start->vertex_screen.y, z}, color, z_buffer, color_buffer);
+
+        z += dz;
+        u += du;
+        v += dv;
+      }
+    }
+  }
+
+  // Limpar vértices interpolados criados
+  for (auto &line : scanlines)
+  {
+    for (auto v : line)
+      delete v;
+  }
+}

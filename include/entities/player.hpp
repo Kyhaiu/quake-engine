@@ -54,6 +54,8 @@ public:
   void PlayerMoveRight(float distance, bool moveInWorldPlane = true);
   void PlayerMoveUp(float distance);
 
+  void moveArcball(float deltaX, float deltaY);
+
   // Retorna posição simulada caso o player se mova
   Vec3f PlayerPretendingPosition(char key, float distance, bool moveInWorldPlane = true);
 

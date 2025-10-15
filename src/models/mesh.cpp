@@ -339,7 +339,6 @@ void Mesh::determineVertexNormals()
 
     while (true)
     {
-
       Vec3f face_normal = he->incident_face->normal;
 
       normal.x += face_normal.x;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 
 class InputHandler
 {
@@ -20,8 +20,11 @@ public:
   bool isToggleMoveLook() const { return toggleMoveLook; }
 
 private:
-  bool moveForward, moveBackward;
-  bool turnLeft, turnRight;
-  bool strafeLeft, strafeRight;
-  bool toggleMoveLook;
+  bool moveForward = false;
+  bool moveBackward = false;
+  bool turnLeft = false;
+  bool turnRight = false;
+  bool strafeLeft = false;
+  bool strafeRight = false;
+  bool toggleMoveLook = false;
 };

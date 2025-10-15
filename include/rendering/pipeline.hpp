@@ -6,6 +6,8 @@
 #include <math/math.hpp>
 #include <models/color.hpp>
 #include <models/light.hpp>
+#include <models/texture.hpp>
+#include <core/halfedge.hpp>
 #include <algorithm>
 
 #include <iostream>
@@ -50,6 +52,13 @@ namespace pipeline
   void fill_polygon_flat(const std::vector<Vec3f> &vertexes, const models::GlobalLight &global_light, const std::vector<models::Omni> &omni_lights, const Vec3f &eye, const Vec3f &face_centroid, const Vec3f &face_normal, const models::Material &object_material, std::vector<std::vector<float>> &z_buffer, std::vector<std::vector<models::Color>> &color_buffer);
   void fill_polygon_gourand(const std::vector<std::pair<Vec3f, models::Color>> &vertexes, std::vector<std::vector<float>> &z_buffer, std::vector<std::vector<models::Color>> &color_buffer);
   void fill_polygon_phong(const std::vector<std::pair<Vec3f, Vec3f>> &vertexes, const Vec3f &centroid, const models::GlobalLight &global_light, const std::vector<models::Omni> &omni_lights, const Vec3f &eye, const models::Material &object_material, std::vector<std::vector<float>> &z_buffer, std::vector<std::vector<models::Color>> &color_buffer);
+  void fill_polygon_texture(const std::vector<Vertex *> &vertexes, const models::Texture &tex,
+                            const models::GlobalLight &global_light,
+                            const std::vector<models::Omni> &omni_lights,
+                            const Vec3f &eye, const Vec3f &face_centroid, const Vec3f &face_normal,
+                            const models::Material &object_material,
+                            std::vector<std::vector<float>> &z_buffer,
+                            std::vector<std::vector<models::Color>> &color_buffer);
 
   // Outras funções
   std::vector<Vec3f> BresenhamLine(Vec3f start, Vec3f end);
