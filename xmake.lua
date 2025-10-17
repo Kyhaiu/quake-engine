@@ -84,6 +84,14 @@ target("utils")
 target("app")
   set_kind("binary")
   add_files("src/main.cpp")
+  add_files(
+        "include/imgui/imgui.cpp",
+        "include/imgui/imgui_draw.cpp",
+        "include/imgui/imgui_tables.cpp",
+        "include/imgui/imgui_widgets.cpp",
+        "include/imgui-sdl3/imgui_impl_sdl3.cpp",
+        "include/imgui-sdl3/imgui_impl_sdlrenderer3.cpp"
+    )
   add_packages(table.unpack(project_libs))
   add_deps("imgui")
   add_deps("imgui-sdl3")

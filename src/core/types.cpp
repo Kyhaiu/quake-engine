@@ -57,7 +57,7 @@ void Face::determine_face_normal()
 {
   Vec3f p1, p2, p3;
 
-  HalfEdge *he = this->he;
+  // HalfEdge *he = this->he;
 
   // Isso garante que o percurso aconteça no sentido anti-horário
   p1 = this->he->prev->origin->vertex.to_vec3();

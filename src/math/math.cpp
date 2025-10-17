@@ -115,7 +115,7 @@ float Wrap(float value, float min, float max)
  */
 Vec2f Vector2Normalize(Vec2f a)
 {
-  float length = sqrtf(a.x * a.x + a.y * a.y);
+  float length = sqrt(a.x * a.x + a.y * a.y);
 
   Vec2f result = {a.x / length, a.y / length};
 
@@ -151,7 +151,7 @@ float Vector2DotProduct(Vec2f a, Vec2f b)
  */
 float Vector2Distance(Vec2f a, Vec2f b)
 {
-  float result = sqrtf(((b.x - a.x) * (b.x - a.x)) + ((b.y - a.y) * (b.y - a.y)));
+  float result = sqrt(((b.x - a.x) * (b.x - a.x)) + ((b.y - a.y) * (b.y - a.y)));
 
   return result;
 }
@@ -195,7 +195,7 @@ Vec3f Vector3Normalize(Vec3f a)
 {
   Vec3f result = {0.0f, 0.0f, 0.0f};
 
-  float length = sqrtf((a.x * a.x) + (a.y * a.y) + (a.z * a.z));
+  float length = sqrt((a.x * a.x) + (a.y * a.y) + (a.z * a.z));
 
   if (length != 0.0f)
   {
@@ -262,7 +262,7 @@ float Vector3Distance(Vec3f a, Vec3f b)
   float dx = b.x - a.x;
   float dy = b.y - a.y;
   float dz = b.z - a.z;
-  result = sqrtf(dx * dx + dy * dy + dz * dz);
+  result = sqrt(dx * dx + dy * dy + dz * dz);
 
   return result;
 }
@@ -287,7 +287,7 @@ float Vector3Angle(Vec3f a, Vec3f b)
 
   Vec3f cross = {x, y, z};
 
-  float len = sqrtf(cross.x * cross.x + cross.y * cross.y + cross.z * cross.z);
+  float len = sqrt(cross.x * cross.x + cross.y * cross.y + cross.z * cross.z);
   float dot = (a.x * b.x + a.y * b.y + a.z * b.z);
   result = atan2f(len, dot);
 
@@ -339,7 +339,7 @@ Vec3f Vector3RotateByAxisAngle(Vec3f a, Vec3f axis, float angle)
   Vec3f result = a;
 
   // Vector3Normalize(axis);
-  float length = sqrtf(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
+  float length = sqrt(axis.x * axis.x + axis.y * axis.y + axis.z * axis.z);
   if (length == 0.0f)
     length = 1.0f;
   float ilength = 1.0f / length;
@@ -692,7 +692,7 @@ Matrix MatrixRotate(Vec3f axis, float angle)
 
   if ((lengthSquared != 1.0f) && (lengthSquared != 0.0f))
   {
-    float ilength = 1.0f / sqrtf(lengthSquared);
+    float ilength = 1.0f / sqrt(lengthSquared);
     x *= ilength;
     y *= ilength;
     z *= ilength;
