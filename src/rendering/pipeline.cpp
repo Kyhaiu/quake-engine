@@ -637,7 +637,7 @@ std::vector<Vec3f> pipeline::BresenhamLine(Vec3f start, Vec3f end)
  */
 void pipeline::DrawLineBuffer(const std::vector<Vec3f> &vertexes, const models::Color &color, std::vector<std::vector<float>> &z_buffer, std::vector<std::vector<models::Color>> &color_buffer)
 {
-  ImDrawList *draw_list = ImGui::GetForegroundDrawList();
+  // ImDrawList *draw_list = ImGui::GetForegroundDrawList();
   int vertex_length = vertexes.size();
   for (size_t i = 0; i < vertex_length; i++)
   {
